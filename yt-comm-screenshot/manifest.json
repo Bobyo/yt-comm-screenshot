@@ -5,22 +5,21 @@
     "description": "Take screenshots of YouTube comments",
     "permissions": [
       "activeTab",
-      "downloads"
+      "downloads",
+      "scripting",
+      "tabs"
     ],
     "host_permissions": [
-      "*://*.youtube.com/*"
+      "<all_urls>"
     ],
+    "background": {
+      "service_worker": "background.js"
+    },
     "content_scripts": [
       {
         "matches": ["*://*.youtube.com/*"],
-        "js": ["html2canvas.min.js", "content.js"],
+        "js": ["content.js"],
         "css": ["styles.css"]
-      }
-    ],
-    "web_accessible_resources": [
-      {
-        "resources": ["html2canvas.min.js"],
-        "matches": ["*://*.youtube.com/*"]
       }
     ],
     "icons": {

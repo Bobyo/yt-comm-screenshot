@@ -6,8 +6,8 @@ function showLoader(message = "Taking screenshot...") {
   return loader;
 }
 
-async function takeScreenshot(comment, screenshotBtn) {
-  const loader = showLoader();
+async function takeScreenshot(comment) {
+  let loader;
 
   try {
     const allScreenshotBtns = document.querySelectorAll(
@@ -18,118 +18,46 @@ async function takeScreenshot(comment, screenshotBtn) {
     allScreenshotBtns.forEach((btn) => (btn.style.display = "none"));
     translationButtons.forEach((btn) => (btn.style.display = "none"));
 
-    const images = comment.querySelectorAll("img");
-    await Promise.all(
-      Array.from(images).map((img) => {
-        if (img.complete) return Promise.resolve();
-        return new Promise((resolve) => {
-          img.onload = resolve;
-          img.onerror = resolve;
-        });
-      })
-    );
+    comment.scrollIntoView({ block: "center", behavior: "instant" });
 
-    const isDarkMode =
-      document.querySelector("html")?.hasAttribute("dark") ||
-      document.querySelector("html")?.getAttribute("dark-theme") === "true";
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    const rect = comment.getBoundingClientRect();
 
-    const canvas = await html2canvas(comment, {
-      backgroundColor: isDarkMode ? "#0f0f0f" : "#ffffff",
-      scale: 2,
-      logging: false,
-      willReadFrequently: true,
-      allowTaint: true,
-      useCORS: true,
-      ignoreElements: (element) => {
-        if (
-          element.tagName.toLowerCase() === "script" ||
-          element.tagName.toLowerCase() === "iframe"
-        ) {
-          return true;
-        }
+    const author =
+      comment.querySelector("#author-text")?.textContent?.trim() || "unknown";
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const fileName = `youtube-comment-${author}-${timestamp}.png`;
 
-        if (element.classList.contains("translate-button")) {
-          return true;
-        }
-        return false;
+    const response = await chrome.runtime.sendMessage({
+      action: "takeScreenshot",
+      rect: {
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
       },
-      onclone: (clonedDoc) => {
-        const scripts = clonedDoc.getElementsByTagName("script");
-        while (scripts[0]) {
-          scripts[0].parentNode.removeChild(scripts[0]);
-        }
-
-        if (isDarkMode) {
-          clonedDoc.documentElement.setAttribute("dark-mode", "");
-          const textElements = clonedDoc.querySelectorAll("*");
-          textElements.forEach((el) => {
-            const color = window.getComputedStyle(el).color;
-            if (color === "rgb(0, 0, 0)") {
-              el.style.color = "#ffffff";
-            }
-          });
-        }
-
-        const translationBtns = clonedDoc.querySelectorAll(".translate-button");
-        translationBtns.forEach((btn) => btn.remove());
-
-        const svgIcons = clonedDoc.querySelectorAll("svg");
-        svgIcons.forEach((svg) => {
-          const parent = svg.closest("ytd-toggle-button-renderer");
-          if (parent) {
-            svg.style.fill = isDarkMode ? "#aaa" : "#666";
-          }
-        });
-
-        const elements = clonedDoc.querySelectorAll("*");
-        elements.forEach((el) => {
-          el.removeAttribute("onclick");
-          el.removeAttribute("onload");
-          el.removeAttribute("onerror");
-
-          if (el.hasAttribute("data-no-script")) {
-            el.removeAttribute("data-no-script");
-          }
-        });
-      },
-      removeContainer: true,
-      imageTimeout: 0,
-      foreignObjectRendering: false,
+      devicePixelRatio: window.devicePixelRatio,
+      fileName: fileName,
     });
 
     allScreenshotBtns.forEach((btn) => (btn.style.display = ""));
     translationButtons.forEach((btn) => (btn.style.display = ""));
 
-    const blob = await new Promise((resolve) =>
-      canvas.toBlob(resolve, "image/png")
-    );
+    loader = showLoader("Screenshot saved!");
+    setTimeout(() => loader.remove(), 1000);
 
-    const author =
-      comment.querySelector("#author-text")?.textContent?.trim() || "unknown";
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const filename = `youtube-comment-${author}-${timestamp}.png`;
-
-    // Download image
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    loader.textContent = "Screenshot saved!";
-    setTimeout(() => {
-      loader.remove();
-    }, 1000);
+    if (!response.success) {
+      throw new Error(response.error || "Screenshot failed");
+    }
   } catch (error) {
     console.error("Screenshot failed:", error);
 
-    loader.textContent = "Screenshot failed";
-    loader.style.background = "rgba(200, 0, 0, 0.8)";
+    if (!loader) {
+      loader = showLoader("Screenshot failed");
+      loader.style.background = "rgba(200, 0, 0, 0.8)";
+    }
+    setTimeout(() => loader.remove(), 2000);
 
-    setTimeout(() => {
-      loader.remove();
-    }, 2000);
     const allScreenshotBtns = document.querySelectorAll(
       ".yt-comment-screenshot-btn"
     );

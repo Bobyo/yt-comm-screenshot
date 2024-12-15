@@ -39,25 +39,4 @@
     gap: 12px;
     font-family: Roboto, Arial, sans-serif;
   }
-  
-  .yt-comment-screenshot-loader::before {
-    content: '';
-    width: 20px;
-    height: 20px;
-    border: 2px solid #fff;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: screenshot-spin 1s linear infinite;
-  }
-  
-  @keyframes screenshot-spin {
-    to { transform: rotate(360deg); }
-  }
-  
-  /* Shadow DOM styles */
-  .screenshot-container {
-    position: absolute;
-    left: -9999px;
-    top: -9999px;
-    z-index: -1;
-  }
+
