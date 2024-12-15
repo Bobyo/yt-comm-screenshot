@@ -1,0 +1,30 @@
+{
+    "manifest_version": 3,
+    "name": "YouTube Comment Screenshot",
+    "version": "1.0",
+    "description": "Take screenshots of YouTube comments",
+    "permissions": [
+      "activeTab",
+      "downloads"
+    ],
+    "host_permissions": [
+      "*://*.youtube.com/*"
+    ],
+    "content_scripts": [
+      {
+        "matches": ["*://*.youtube.com/*"],
+        "js": ["html2canvas.min.js", "content.js"],
+        "css": ["styles.css"]
+      }
+    ],
+    "web_accessible_resources": [
+      {
+        "resources": ["html2canvas.min.js"],
+        "matches": ["*://*.youtube.com/*"]
+      }
+    ],
+    "icons": {
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
+  }
