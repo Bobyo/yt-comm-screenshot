@@ -23,6 +23,14 @@ async function takeScreenshot(comment) {
     await new Promise((resolve) => setTimeout(resolve, 150));
     const rect = comment.getBoundingClientRect();
 
+    const padding = 15;
+    const paddedRect = {
+      x: Math.max(0, rect.x - padding),
+      y: Math.max(0, rect.y - padding),
+      width: rect.width + padding * 2,
+      height: rect.height + padding * 2,
+    };
+
     const author =
       comment.querySelector("#author-text")?.textContent?.trim() || "unknown";
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -30,12 +38,7 @@ async function takeScreenshot(comment) {
 
     const response = await chrome.runtime.sendMessage({
       action: "takeScreenshot",
-      rect: {
-        x: rect.x,
-        y: rect.y,
-        width: rect.width,
-        height: rect.height,
-      },
+      rect: paddedRect,
       devicePixelRatio: window.devicePixelRatio,
       fileName: fileName,
     });
@@ -52,12 +55,14 @@ async function takeScreenshot(comment) {
   } catch (error) {
     console.error("Screenshot failed:", error);
 
+    // Show error loader
     if (!loader) {
       loader = showLoader("Screenshot failed");
       loader.style.background = "rgba(200, 0, 0, 0.8)";
     }
     setTimeout(() => loader.remove(), 2000);
 
+    // Cleanup on error
     const allScreenshotBtns = document.querySelectorAll(
       ".yt-comment-screenshot-btn"
     );
