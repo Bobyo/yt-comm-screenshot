@@ -14,6 +14,7 @@ async function takeScreenshot(comment) {
       ".yt-comment-screenshot-btn"
     );
     const translationButtons = comment.querySelectorAll(".translate-button");
+    z;
 
     allScreenshotBtns.forEach((btn) => (btn.style.display = "none"));
     translationButtons.forEach((btn) => (btn.style.display = "none"));
